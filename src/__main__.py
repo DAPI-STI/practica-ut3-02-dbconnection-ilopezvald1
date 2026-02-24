@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from .db import get_connection
-from .incidencias import (
+from db import get_connection
+from incidencias import (
     asignar_tecnico,
     cerrar_incidencia,
     crear_incidencia,
