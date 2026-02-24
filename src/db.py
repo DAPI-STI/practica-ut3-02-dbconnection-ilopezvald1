@@ -34,7 +34,19 @@ def load_config_from_env() -> DBConfig:
     Recomendación:
     - Validar que DB_PORT sea un número entero.
     """
-    raise NotImplementedError
+    try:
+        port = int(os.getenv("DB_PORT", "3306"))
+        return DBConfig(
+            host=os.getenv("DB_HOST", "localhost"),
+            port=port,
+            database=os.getenv("DB_NAME", "sti_incidencias"),
+            user=os.getenv("DB_USER", "sti_app"),
+            password=os.getenv("DB_PASSWORD", "sti_app_2026"))
+    except ValueError as e:
+        logger.error("variable DB_PORT tiene que ser numero entero")
+        raise e
+    
+    
 
 
 def get_connection(cfg: Optional[DBConfig] = None) -> MySQLConnection:
@@ -44,7 +56,23 @@ def get_connection(cfg: Optional[DBConfig] = None) -> MySQLConnection:
     - Si cfg es None, debe llamar a load_config_from_env().
     - Debe usar mysql.connector.connect(...) con los parámetros de cfg.
     """
-    raise NotImplementedError
+    if cfg is None:
+        cfg = load_config_from_env()
+    
+    try:
+        conn = mysql.connector.connect(
+            host=cfg.host,
+            port=cfg.port,
+            database=cfg.database,
+            user=cfg.user,
+            password=cfg.password
+        )
+        logger.info(f"Conexión establecida a {cfg.host}:{cfg.port}/{cfg.database}")
+        return conn
+    except mysql.connector.Error as e:
+        logger.error(f"Error al conectar a la base de datos: {e}")
+        raise
+   
 
 
 def fetch_all(conn: MySQLConnection, query: str, params: Optional[Iterable[Any]] = None) -> list[dict]:
@@ -57,7 +85,20 @@ def fetch_all(conn: MySQLConnection, query: str, params: Optional[Iterable[Any]]
     - Obtener filas con cur.fetchall()
     - Cerrar el cursor siempre (try/finally)
     """
-    raise NotImplementedError
+    cursor = None
+    try:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(query, params or ())
+        results = cursor.fetchall()
+        logger.debug(f"Consulta ejecutada: {query}, filas obtenidas: {len(results)}")
+        return results
+    except mysql.connector.Error as e:
+        logger.error(f"Error en la consulta SELECT: {e}")
+        raise
+    finally:
+        if cursor:
+            cursor.close()
+    
 
 
 def execute(conn: MySQLConnection, query: str, params: Optional[Iterable[Any]] = None) -> int:
@@ -71,4 +112,19 @@ def execute(conn: MySQLConnection, query: str, params: Optional[Iterable[Any]] =
     - Devolver cur.rowcount
     - Cerrar el cursor siempre (try/finally)
     """
+    cursor = None
+    try:
+        cursor = conn.cursor()
+        cursor.execute(query, params or ())
+        conn.commit()
+        affected_rows = cursor.rowcount
+        logger.debug(f"Sentencia ejecutada: {query}, filas afectadas: {affected_rows}")
+        return affected_rows
+    except mysql.connector.Error as e:
+        logger.error(f"Error en la sentencia de modificación: {e}")
+        conn.rollback()
+        raise
+    finally:
+        if cursor:
+            cursor.close()
     raise NotImplementedError
