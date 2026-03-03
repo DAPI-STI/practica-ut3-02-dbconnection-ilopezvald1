@@ -19,7 +19,7 @@ jobs:
       with:
         test-name: test_01_conexion_BD
         setup-command: ''
-        command: python -m pytest -q -k tests/test_db_connection.py::test_connection_ok
+        command: python -m pytest -q tests/test_db_connection.py::test_connection_ok
         timeout: 30
         max-score: 10
     - name: test_02_crear_incidencia_y_listar_sin_tecnico
@@ -28,7 +28,7 @@ jobs:
       with:
         test-name: test_02_crear_incidencia_y_listar_sin_tecnico
         setup-command: ''
-        command: python -m pytest -q -k tests/test_incidencias.py::test_crear_y_listar_sin_tecnico
+        command: python -m pytest -q tests/test_incidencias.py::test_crear_y_listar_sin_tecnico
         timeout: 30
         max-score: 35
     - name: test_03_asignar_tecnico_y_listar_incidencias
@@ -37,7 +37,7 @@ jobs:
       with:
         test-name: test_03_asignar_tecnico_y_listar_incidencias
         setup-command: ''
-        command: python -m pytest -q -k tests/test_incidencias.py::test_asignar_y_cerrar
+        command: python -m pytest -q tests/test_incidencias.py::test_asignar_y_cerrar
         timeout: 30
         max-score: 35
     - name: test_04_validaciones
@@ -46,7 +46,7 @@ jobs:
       with:
         test-name: test_04_validaciones
         setup-command: ''
-        command: python -m pytest -q -k tests/test_incidencias.py::test_validaciones
+        command: python -m pytest -q tests/test_incidencias.py::test_validaciones
         timeout: 30
         max-score: 20
     - name: Autograding Reporter
