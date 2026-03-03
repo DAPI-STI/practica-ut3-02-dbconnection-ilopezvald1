@@ -1,0 +1,40 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: test_01_conexion_BD
+      id: test_01_conexion_bd
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: test_01_conexion_BD
+        setup-command: ''
+        command: pytest -q tests/test_db_connection.py::test_connection_ok
+        timeout: 30
+        max-score: 10
+    - name: test_02_crear_incidencia_y_listar_sin_tecnico
+      id: test_02_crear_incidencia_y_listar_sin_tecnico
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: test_02_crear_incidencia_y_listar_sin_tecnico
+        setup-command: ''
+        command: pytest -q tests/test_incidencias.py::test_crear_y_listar_sin_tecnico
+        timeout: 30
+        max-score: 35
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        TEST_01_CONEXION_BD_RESULTS: "${{steps.test_01_conexion_bd.outputs.result}}"
+        TEST_02_CREAR_INCIDENCIA_Y_LISTAR_SIN_TECNICO_RESULTS: "${{steps.test_02_crear_incidencia_y_listar_sin_tecnico.outputs.result}}"
+      with:
+        runners: test_01_conexion_bd,test_02_crear_incidencia_y_listar_sin_tecnico
