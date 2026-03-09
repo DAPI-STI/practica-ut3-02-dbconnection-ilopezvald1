@@ -62,20 +62,14 @@ def get_connection(cfg: Optional[DBConfig] = None) -> MySQLConnection:
     if cfg is None:
         cfg = load_config_from_env()
     
-    try:
-        conn = mysql.connector.connect(
-            host=cfg.host,
-            port=cfg.port,
-            database=cfg.database,
-            user=cfg.user,
-            password=cfg.password
-        )
-        logger.info(f"Conexión establecida a {cfg.host}:{cfg.port}/{cfg.database}")
-        return conn
-    except mysql.connector.Error as e:
-        logger.error(f"Error al conectar a la base de datos: {e}")
-        raise
-   
+    return mysql.connector.connect(
+        host=cfg.host,
+        port=cfg.port,
+        database=cfg.database,
+        user=cfg.user,
+        password=cfg.password
+    )
+    
 
 
 def fetch_all(conn: MySQLConnection, query: str, params: Optional[Iterable[Any]] = None) -> list[dict]:
@@ -88,19 +82,12 @@ def fetch_all(conn: MySQLConnection, query: str, params: Optional[Iterable[Any]]
     - Obtener filas con cur.fetchall()
     - Cerrar el cursor siempre (try/finally)
     """
-    cursor = None
+    cur = conn.cursor(dictionary=True)
     try:
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute(query, params or ())
-        results = cursor.fetchall()
-        logger.debug(f"Consulta ejecutada: {query}, filas obtenidas: {len(results)}")
-        return results
-    except mysql.connector.Error as e:
-        logger.error(f"Error en la consulta SELECT: {e}")
-        raise
+        cur.execute(query, params or ())
+        return cur.fetchall()
     finally:
-        if cursor:
-            cursor.close()
+        cur.close()
     
 
 
@@ -115,19 +102,10 @@ def execute(conn: MySQLConnection, query: str, params: Optional[Iterable[Any]] =
     - Devolver cur.rowcount
     - Cerrar el cursor siempre (try/finally)
     """
-    cursor = None
+    cur = conn.cursor()
     try:
-        cursor = conn.cursor()
-        cursor.execute(query, params or ())
+        cur.execute(query, params or ())
         conn.commit()
-        affected_rows = cursor.rowcount
-        logger.debug(f"Sentencia ejecutada: {query}, filas afectadas: {affected_rows}")
-        return affected_rows
-    except mysql.connector.Error as e:
-        logger.error(f"Error en la sentencia de modificación: {e}")
-        conn.rollback()
-        raise
+        return cur.rowcount
     finally:
-        if cursor:
-            cursor.close()
-    raise NotImplementedError
+        cur.close()
